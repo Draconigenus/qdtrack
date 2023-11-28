@@ -74,7 +74,7 @@ def _cv2_show_tracks(img,
             color=(0, 0, 0))
 
         # score
-        text = '{:.02f}'.format(score)
+        text = '{:.02f} {}'.format(score, classes[label])
         width = len(text) * text_width
         img[y1 - text_height:y1, x1:x1 + width, :] = bbox_color
         cv2.putText(
