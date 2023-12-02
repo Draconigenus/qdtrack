@@ -13,12 +13,23 @@ import time
 from qdtrack.apis import inference_model, init_model
 
 slowdown = False
+cycle = False
+cycle_start = 0
 
 def on_press(key):
     global slowdown
-    slowdown = not slowdown
+    global cycle
+    global cycle_start
+    if (key == keyboard.Key.space):
+        cycle = not cycle
+        cycle_start = time.time()
+    else:
+        slowdown = not slowdown
+        cycle = False
 
 def main():
+    global slowdown
+    global cycle_start
     parser = ArgumentParser()
     parser.add_argument('config', help='config file')
     # parser.add_argument('--input', help='input video file or folder')
@@ -60,6 +71,7 @@ def main():
     # test and show/save the images
     listener = keyboard.Listener(on_press=on_press)
     listener.start()
+    cycle_start = time.time()
     i = 0
     while True:
         result, img = cam.read()
@@ -82,10 +94,14 @@ def main():
             out_file=None,
             backend=args.backend)
         # print(f"Displaying Frame {i}")
-        cv2.putText(img, f"FPS: {int(fps)}", (0,25), cv2.FONT_HERSHEY_COMPLEX, 1.0, color=(0,255,0))
+        cv2.putText(img, f"{'CPU' if slowdown else 'FPGA Accelerator'} FPS: {int(fps)}", (0,25), cv2.FONT_HERSHEY_COMPLEX, 1.0, color=(0,255,0))
         mmcv.imshow(img, wait_time=1)
         if slowdown:
             time.sleep(additional_delay)
+
+        if (cycle and (time.time() - cycle_start) > 5):
+            slowdown = not slowdown
+            cycle_start = time.time()
         i += 1
 
     # if args.output and OUT_VIDEO:
